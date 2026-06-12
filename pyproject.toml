@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "apifox-endpoint-sync"
 version = "0.1.0"
-description = "Let Codex update one Apifox endpoint safely, without imports or project-wide writes."
+description = "安全的单 endpoint Apifox 文档同步工具，让 Codex 只更新一个接口，不做导入或项目级写入。"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
