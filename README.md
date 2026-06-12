@@ -64,20 +64,53 @@ CLI for safely updating one Apifox API endpoint document with Codex or AI agents
 
 不做批量导入，不改公共参数，不碰环境、变量、安全配置或项目设置。
 
-## 安装
+## 前置条件
 
-克隆仓库后直接安装：
+- Python 3.10+
+- 官方 Apifox CLI，且本地可以直接运行 `apifox`
+- 一个已有的 Apifox project
+- 一个已有的 Apifox endpoint ID
+- 一个可以登录 Apifox CLI 的 token
+
+本工具只负责安全更新已有 endpoint 的文档，不负责创建 endpoint、批量导入接口或初始化 Apifox 项目。
+
+## 快速开始
 
 ```bash
+git clone https://github.com/sunny-kobe/apifox-endpoint-sync.git
+cd apifox-endpoint-sync
+
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -e .
+
+cp examples/.env.example .env
+```
+
+编辑 `.env`，填入你的 Apifox token、project ID、project name 和 branch。然后先运行 dry-run：
+
+```bash
+apifox-endpoint-sync \
+  --endpoint-id endpoint_id_placeholder \
+  --update-file examples/endpoint-update.example.json \
+  --expected-method GET \
+  --expected-path /api/admin/users \
+  --dry-run
+```
+
+如果 dry-run 输出的 endpoint ID、method、path 和命令计划都正确，再去掉 `--dry-run` 执行真实更新。
+
+## 安装方式
+
+推荐用可编辑安装：
+
+```bash
 pip install -e .
 ```
 
 也可以不安装，直接运行 checkout 内的脚本：
 
 ```bash
-chmod +x scripts/apifox-endpoint-sync
 ./scripts/apifox-endpoint-sync --help
 ```
 
@@ -102,6 +135,15 @@ APIFOX_BRANCH=main
 
 `.env` 只放在本地，不要提交真实 token、project ID、endpoint ID、私有 URL 或私有接口样例。
 
+## 准备更新信息
+
+一次更新通常需要准备四类信息：
+
+- `endpointId`：目标 Apifox 接口的 endpoint ID。可以从 Apifox 页面、已有脚本、团队文档或接口管理流程中获取。
+- `method` 和 `path`：建议用 `--expected-method` 和 `--expected-path` 显式传入，避免把 JSON 写到错误接口。
+- `endpoint-update` JSON：可以参考 [examples/endpoint-update.example.json](examples/endpoint-update.example.json)，也可以让 Codex 根据代码生成。
+- Apifox project 信息：通过 `.env` 或命令参数传入 `APIFOX_PROJECT_ID`、`APIFOX_PROJECT_NAME`、`APIFOX_BRANCH`。
+
 ## 一行命令
 
 先 dry-run：
@@ -117,6 +159,40 @@ apifox-endpoint-sync --endpoint-id endpoint_id_placeholder --update-file example
 ```
 
 更新 JSON 会通过标准输入传给 `apifox endpoint update <id>`。Token 会通过标准输入传给 `apifox login --with-token`，避免把敏感值拼进命令行。
+
+## 命令参数
+
+| 参数 | 是否必填 | 说明 |
+| --- | --- | --- |
+| `--endpoint-id` | 是 | 要更新的 Apifox endpoint ID。 |
+| `--update-file` | 是 | `endpoint-update` JSON 文件路径。 |
+| `--expected-method` | 否 | 期望的 HTTP method，例如 `GET`。传入后会和 JSON 中的 `method` 对比。 |
+| `--expected-path` | 否 | 期望的接口 path，例如 `/api/admin/users`。传入后会和 JSON 中的 `path` 对比。 |
+| `--env-file` | 否 | `.env` 文件路径，默认读取当前目录的 `.env`。 |
+| `--token` | 否 | Apifox token。更推荐使用 `.env` 或环境变量 `APIFOX_TOKEN`。 |
+| `--project-id` | 否 | Apifox project ID，会覆盖 `.env` 里的 `APIFOX_PROJECT_ID`。 |
+| `--project-name` | 否 | 期望的 project name，会覆盖 `.env` 里的 `APIFOX_PROJECT_NAME`。 |
+| `--branch` | 否 | Apifox branch，会覆盖 `.env` 里的 `APIFOX_BRANCH`。 |
+| `--dry-run` | 否 | 只打印更新计划和将执行的命令，不真实写入。 |
+| `--skip-login` | 否 | 跳过 `apifox login --with-token`。一般只在你已经登录过 CLI 时使用。 |
+| `--skip-project-list` | 否 | 跳过更新前的 `apifox project list`。 |
+| `--skip-fetch-current` | 否 | 跳过更新前的 `apifox endpoint get`。 |
+| `--skip-schema-validate` | 否 | 跳过 Apifox CLI 的 `endpoint-update` schema 校验。普通使用不建议跳过。 |
+| `--verbose` | 否 | 输出更详细的命令执行信息。 |
+
+## endpoint-update JSON 要求
+
+最小 JSON 必须包含：
+
+```json
+{
+  "method": "GET",
+  "path": "/api/admin/users",
+  "name": "List users"
+}
+```
+
+实际使用时可以继续补充 endpoint-local 的参数、请求体、响应、示例和描述。不要在单接口 JSON 中写入公共参数、认证配置、环境变量或项目级配置。
 
 ## Codex 使用方式
 
@@ -163,6 +239,31 @@ apifox endpoint update <id>
 - Post-processor
 
 它是一个单 endpoint 文档同步助手，不是项目迁移工具。
+
+## 常见问题
+
+**会创建新的 Apifox endpoint 吗？**  
+不会。它只更新你传入的已有 `endpointId`。
+
+**可以批量同步整个项目吗？**  
+不可以。这个项目刻意只支持单 endpoint 更新，避免 AI 或脚本误改大量接口。
+
+**为什么要传 `--expected-method` 和 `--expected-path`？**  
+它们是防呆护栏。即使 Codex 生成了错误 JSON，本地校验也会在写入前拦住 method/path 不一致的问题。
+
+**为什么不直接调用 `apifox import`？**  
+因为 import 适合项目级迁移或批量导入，不适合“让 AI 更新一个接口文档”的低风险流程。
+
+**可以在 CI 里用吗？**  
+可以，但建议 CI 默认只跑 `--dry-run` 和 schema 校验。真实写入应当放在受控 job 中，并使用最小权限 token。
+
+## 排错
+
+- `apifox CLI was not found in PATH.`：确认已经安装 Apifox CLI，并且 `apifox` 可以在当前 shell 中直接运行。
+- `APIFOX_TOKEN is required unless --skip-login is used.`：在 `.env`、环境变量或 `--token` 中提供 token。
+- `method mismatch` 或 `path mismatch`：检查 `--expected-method`、`--expected-path` 和 JSON 内容是否一致。
+- `Forbidden endpoint field found`：JSON 中包含了公共参数、认证、安全配置或处理器字段，需要删除。
+- `Public parameters must not be written into a single endpoint`：不要把 `Authorization`、`uid`、`did` 等公共参数写进单接口。
 
 ## 本地校验
 
