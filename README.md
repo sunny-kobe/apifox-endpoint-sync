@@ -1,24 +1,47 @@
 # apifox-endpoint-sync
 
-> 让 Codex 安全更新 Apifox 接口文档，而不是把整个 API 项目的钥匙交给 AI。
+> 一个帮助开发者安全更新 Apifox 接口文档的 CLI 工具：单 endpoint 同步、dry-run 预览、本地安全校验，适合 Codex / AI Agent 辅助维护 API 文档。
 
-`apifox-endpoint-sync` 是一个面向 Codex / AI Agent 工作流的安全型 Apifox 文档同步工具。它只开放一条非常窄、非常可审查的通道：读取一个 `endpoint-update` JSON，本地完成安全校验，先 dry-run 预览计划，再交给 Apifox CLI 做 schema 校验，最后只更新一个已存在的 `endpointId`。
+`apifox-endpoint-sync` 用来解决一个很具体的问题：当你想用 Codex、AI Agent 或脚本更新 Apifox 接口文档时，如何只更新一个接口，而不是误触批量导入、公共参数、环境变量或项目级配置。
+
+它提供一条可审查的 Apifox 文档更新流程：读取一个 `endpoint-update` JSON，本地完成安全校验，先 dry-run 预览更新计划，再交给 Apifox CLI 做 schema 校验，最后只更新一个已存在的 `endpointId`。
 
 English summary:
 
-> A safety-first single-endpoint Apifox doc sync tool for Codex and AI agents.
+> A CLI for safely updating one Apifox API endpoint document with Codex or AI agents.
 
 推荐的 GitHub 仓库简介：
 
 ```text
-安全的单 endpoint Apifox 文档同步工具：让 Codex 更新接口文档，但禁止导入、项目级写入和共享资源修改。
+Apifox 接口文档更新 CLI：安全同步单个 endpoint，适合 Codex / AI Agent 维护 API 文档，支持 dry-run 和本地安全校验。
 ```
 
 English GitHub description:
 
 ```text
-Safe single-endpoint Apifox doc sync for Codex and AI agents. No imports, no project-wide writes, no shared-resource changes.
+CLI for safely updating one Apifox API endpoint document with Codex or AI agents. Dry-run, local validation, no imports.
 ```
+
+## 适合谁用
+
+- 想用 Codex 或 AI Agent 自动整理、更新 Apifox 接口文档的开发者。
+- 想把代码实现、接口样例、测试用例同步到 Apifox 文档的人。
+- 想使用 Apifox CLI，但只希望开放单接口更新权限的团队。
+- 想避免 `apifox import`、公共参数、环境变量、项目设置被误改的维护者。
+- 想找一个轻量、开源、可审计的 API 文档同步脚本的人。
+
+## 你可能在搜索
+
+如果你在搜索这些问题，这个项目就是为这些场景准备的：
+
+- Apifox 如何用 CLI 更新接口文档
+- Apifox endpoint update 使用方式
+- Codex 生成 Apifox 接口文档
+- AI Agent 自动更新 API 文档
+- API 文档同步工具
+- 接口文档自动化更新
+- OpenAPI / Apifox 单接口文档维护
+- 如何安全地让 AI 修改接口文档
 
 ## 亮点
 
@@ -30,7 +53,7 @@ Safe single-endpoint Apifox doc sync for Codex and AI agents. No imports, no pro
 
 ## 背景
 
-AI coding agent 很擅长把代码实现、接口样例和评审意见整理成结构化 API 文档。真正危险的地方通常不在于“生成 JSON”，而在于让自动化工具拥有过大的写入范围。
+维护 API 文档最麻烦的地方，往往不是写一段描述，而是持续把代码里的请求参数、响应结构、接口示例同步到文档平台。AI coding agent 很擅长把代码实现、接口样例和评审意见整理成结构化 API 文档。真正危险的地方通常不在于“生成 JSON”，而在于让自动化工具拥有过大的写入范围。
 
 `apifox-endpoint-sync` 选择把能力边界收窄：
 

@@ -5,14 +5,27 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "apifox-endpoint-sync"
 version = "0.1.0"
-description = "安全的单 endpoint Apifox 文档同步工具，让 Codex 只更新一个接口，不做导入或项目级写入。"
+description = "Apifox 接口文档更新 CLI：安全同步单个 endpoint，适合 Codex / AI Agent 维护 API 文档，支持 dry-run 和本地安全校验。"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
   { name = "sunny-kobe" }
 ]
-keywords = ["apifox", "codex", "api-documentation", "cli", "automation", "ai-agent", "safety"]
+keywords = [
+  "apifox",
+  "apifox-cli",
+  "codex",
+  "api-documentation",
+  "api-docs",
+  "endpoint-sync",
+  "cli",
+  "automation",
+  "ai-agent",
+  "dry-run",
+  "接口文档",
+  "api文档",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
