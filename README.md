@@ -22,6 +22,40 @@ English GitHub description:
 CLI for safely updating one Apifox API endpoint document with Codex or AI agents. Dry-run, local validation, no imports.
 ```
 
+## 30 秒看效果
+
+先运行 dry-run，不会真实写入 Apifox：
+
+```bash
+apifox-endpoint-sync \
+  --endpoint-id endpoint_id_placeholder \
+  --update-file examples/endpoint-update.example.json \
+  --expected-method GET \
+  --expected-path /api/admin/users \
+  --dry-run
+```
+
+你会先看到明确的更新计划：
+
+```text
+Apifox endpoint update plan
+- endpointId: endpoint_id_placeholder
+- method/path: GET /api/admin/users
+- update file: /path/to/examples/endpoint-update.example.json
+- project id: (not set)
+- project name: (not set)
+- branch: (default)
+- dry run: yes
+Commands that would run
+- apifox login --with-token <stdin>
+- apifox project list
+- apifox endpoint get endpoint_id_placeholder
+- apifox cli-schema validate endpoint-update <stdin>
+- apifox endpoint update endpoint_id_placeholder <stdin>
+```
+
+确认 endpoint ID、method、path 和命令计划无误后，再去掉 `--dry-run` 执行真实更新。
+
 ## 适合谁用
 
 - 想用 Codex 或 AI Agent 自动整理、更新 Apifox 接口文档的开发者。
@@ -50,6 +84,15 @@ CLI for safely updating one Apifox API endpoint document with Codex or AI agents
 - 推荐流程默认先 dry-run，先看计划再写入。
 - 在调用 Apifox CLI 之前拦截常见的项目级写入风险。
 - 只使用 Python 标准库，依赖少，容易审计，适合开源项目直接采用。
+
+## 为什么不是 apifox import
+
+`apifox import` 更适合项目级导入或迁移，不适合让 AI 自动更新一个接口文档。这个项目刻意只允许 `apifox endpoint update <id>`，核心目标是把自动化写入范围压到最小。
+
+| 方式 | 适合场景 | 风险 |
+| --- | --- | --- |
+| `apifox import` | OpenAPI 项目导入、批量迁移 | 影响范围大，需要更严格人工 review |
+| `apifox-endpoint-sync` | 单接口文档维护、Codex 辅助更新、脚本化小改动 | 只更新一个 endpoint，可 dry-run 和本地校验 |
 
 ## 背景
 
